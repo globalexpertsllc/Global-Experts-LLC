@@ -1,0 +1,5 @@
+{
+  "name": "Global Experts Consulting",
+  "description": "A comprehensive consulting firm client portal for document management, real-time chat, and appointment scheduling.",
+  "requestFramePermissions": ["camera", "microphone"]
+}

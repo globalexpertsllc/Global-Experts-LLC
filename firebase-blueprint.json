@@ -1,0 +1,409 @@
+{
+  "entities": {
+    "users": {
+      "title": "User Profile",
+      "description": "Stores user profile information, roles, and account status.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Firebase Auth UID" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "phoneNumber": { "type": "string" },
+        "dob": { "type": "string", "format": "date", "description": "Date of Birth (YYYY-MM-DD)" },
+        "role": { "type": "string", "enum": ["admin", "client"] },
+        "status": { "type": "string", "enum": ["active", "blocked"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "adminRank": { "type": "string", "enum": ["super", "senior", "junior"] },
+        "firstName": { "type": "string" },
+        "jobTitle": { "type": "string" },
+        "officeAddress": { "type": "string" },
+        "personalPhone": { "type": "string" },
+        "officePhone": { "type": "string" },
+        "jobId": { "type": "string" },
+        "preferredLanguage": { "type": "string", "description": "User's preferred UI language" },
+        "streetAddress": { "type": "string" },
+        "city": { "type": "string" },
+        "stateProvince": { "type": "string" },
+        "country": { "type": "string" },
+        "zipCode": { "type": "string" },
+        "clientId": { "type": "string", "description": "Generated Client ID (e.g., J151990)" },
+        "photoURL": { "type": "string", "description": "Base64 or URL of the user's profile picture" },
+        "referrerId": { "type": "string", "description": "UID of the user who referred this user" },
+        "referrerName": { "type": "string", "description": "Display name of the user who referred this user" },
+        "referrerClientId": { "type": "string", "description": "Client ID of the user who referred this user" },
+        "googleDriveLink": { "type": "string", "description": "Personal Google Drive link for this user" },
+        "activeFlag": { "type": "string", "enum": ["green", "yellow", "red"], "description": "Current status flag for the user" },
+        "flagNotes": { 
+          "type": "object", 
+          "properties": {
+            "green": { "type": "string" },
+            "yellow": { "type": "string" },
+            "red": { "type": "string" }
+          },
+          "description": "Notes associated with each status flag"
+        }
+      },
+      "required": ["uid", "email", "role", "status"]
+    },
+    "messages": {
+      "title": "Chat Message",
+      "description": "A text message exchanged between admin and client.",
+      "type": "object",
+      "properties": {
+        "clientId": { "type": "string" },
+        "senderId": { "type": "string" },
+        "senderName": { "type": "string" },
+        "senderJobId": { "type": "string" },
+        "text": { "type": "string" },
+        "fileName": { "type": "string" },
+        "fileData": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["clientId", "senderId", "text", "createdAt"]
+    },
+    "appointments": {
+      "title": "Appointment",
+      "description": "A scheduled meeting between a client and a consultant.",
+      "type": "object",
+      "properties": {
+        "clientId": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "service": { "type": "string" },
+        "status": { "type": "string", "enum": ["Complete", "Process", "Cancelled"] },
+        "paymentStatus": { "type": "string", "enum": ["FullPay", "PaPay", "NoPay"] },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "assignedAdminId": { "type": "string", "description": "UID of the assigned administrator" },
+        "assignedAdminName": { "type": "string" },
+        "assignedAdminJobId": { "type": "string" }
+      },
+      "required": ["clientId", "date", "service", "status"]
+    },
+    "services": {
+      "title": "Service",
+      "description": "A service offered by the consulting firm.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "number" }
+      },
+      "required": ["name"]
+    },
+    "branding": {
+      "title": "Branding",
+      "description": "Stores application branding assets like logos.",
+      "type": "object",
+      "properties": {
+        "logoUrl": { "type": "string", "description": "Base64 or URL of the logo" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["logoUrl"]
+    },
+    "hero": {
+      "title": "Hero Section",
+      "description": "Content for the landing page hero section.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "subtitle": { "type": "string" },
+        "mediaUrl": { "type": "string" },
+        "mediaType": { "type": "string", "enum": ["image", "video"] },
+        "reassurance": { "type": "string" }
+      },
+      "required": ["title", "subtitle", "mediaUrl", "mediaType"]
+    },
+    "user_custom_services": {
+      "title": "User Custom Service",
+      "description": "A custom service name created for a specific user.",
+      "type": "object",
+      "properties": {
+        "clientId": { "type": "string" },
+        "name": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["clientId", "name", "createdAt"]
+    },
+    "deleted_users": {
+      "title": "Deleted User Profile",
+      "description": "Stores deleted user profiles for potential restoration within 90 days.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "deletedAt": { "type": "string", "format": "date-time" },
+        "originalData": { "type": "object", "description": "The full original user document" }
+      },
+      "required": ["uid", "email", "deletedAt", "originalData"]
+    },
+    "typing": {
+      "title": "Typing Indicator",
+      "description": "Stores real-time typing status for chat participants.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "boolean", "description": "UID of the user is the key, value is typing status" }
+      }
+    },
+    "timeOffRequests": {
+      "title": "Time Off Request",
+      "description": "A request for time off submitted by an employee.",
+      "type": "object",
+      "properties": {
+        "employeeId": { "type": "string" },
+        "employeeName": { "type": "string" },
+        "teamLeaderId": { "type": "string" },
+        "type": { "type": "string", "enum": ["sick", "vacation", "pto", "errands"] },
+        "amount": { "type": "number" },
+        "startDate": { "type": "string", "format": "date" },
+        "endDate": { "type": "string", "format": "date" },
+        "reason": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "approved", "denied"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["employeeId", "teamLeaderId", "type", "amount", "startDate", "endDate", "status", "createdAt"]
+    },
+    "form_templates": {
+      "title": "Form Template",
+      "description": "An editable intake form template.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "formId": { "type": "string", "description": "3-digit unchangeable form ID" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "headerImage": { "type": "string", "description": "Base64 or URL of the form header image" },
+        "fields": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "label": { "type": "string" },
+              "type": { "type": "string" },
+              "required": { "type": "boolean" },
+              "options": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        }
+      },
+      "required": ["id", "title", "fields", "formId"]
+    },
+    "form_submissions": {
+      "title": "Form Submission",
+      "description": "Data submitted from a specific form template.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "templateId": { "type": "string" },
+        "formId": { "type": "string" },
+        "clientId": { "type": "string" },
+        "clientName": { "type": "string" },
+        "data": { "type": "object", "description": "Key-value pairs of submitted form data" },
+        "submittedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "templateId", "formId", "clientId", "data", "submittedAt"]
+    },
+    "reminders": {
+      "title": "Task Reminder",
+      "description": "A task with a due date and reminder status.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "creatorId": { "type": "string", "description": "UID of the user who created the task" },
+        "assignedToId": { "type": "string", "description": "UID of the user assigned to the task" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "dueDate": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["pending", "completed"] },
+        "priority": { "type": "string", "enum": ["low", "medium", "high"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "creatorId", "title", "dueDate", "status", "createdAt"]
+    },
+    "interaction_logs": {
+      "title": "Interaction Log",
+      "description": "A record of an email or phone call interaction between an admin and a user.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string", "enum": ["email", "call"] },
+        "adminUid": { "type": "string" },
+        "adminJobId": { "type": "string" },
+        "targetUserId": { "type": "string" },
+        "targetUserEmail": { "type": "string" },
+        "targetUserPhone": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "type", "adminUid", "targetUserId", "timestamp"]
+    },
+    "signature_templates": {
+      "title": "Signature Template",
+      "description": "A PDF template with defined fields for signing.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "pdfUrl": { "type": "string", "description": "Base64 or URL of the PDF" },
+        "fields": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "type": { "type": "string", "enum": ["signature", "text", "date"] },
+              "x": { "type": "number" },
+              "y": { "type": "number" },
+              "page": { "type": "number" },
+              "label": { "type": "string" },
+              "required": { "type": "boolean" }
+            }
+          }
+        },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "createdBy": { "type": "string" }
+      },
+      "required": ["name", "pdfUrl", "fields", "createdAt"]
+    },
+    "signature_requests": {
+      "title": "Signature Request",
+      "description": "A request for a user to sign a specific template.",
+      "type": "object",
+      "properties": {
+        "templateId": { "type": "string" },
+        "templateName": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "signed", "declined"] },
+        "fieldValues": { "type": "object" },
+        "sentAt": { "type": "string", "format": "date-time" },
+        "signedAt": { "type": "string", "format": "date-time" },
+        "audit": { "type": "object" }
+      },
+      "required": ["templateId", "userId", "status", "sentAt"]
+    },
+    "restrictedAreaAudit": {
+      "title": "Restricted Area Audit",
+      "description": "Logs of access to restricted administrative areas.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "action": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "details": { "type": "string" }
+      },
+      "required": ["userId", "action", "timestamp"]
+    },
+    "action_audits": {
+      "title": "Action Audit",
+      "description": "Logs of specific actions taken by administrators for supervision purposes.",
+      "type": "object",
+      "properties": {
+        "adminId": { "type": "string" },
+        "adminName": { "type": "string" },
+        "adminOfficeId": { "type": "string" },
+        "action": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "targetId": { "type": "string" },
+        "targetName": { "type": "string" },
+        "details": { "type": "string" },
+        "category": { "type": "string", "enum": ["service", "profile", "system", "access"] }
+      },
+      "required": ["adminId", "action", "timestamp", "category"]
+    },
+    "external_experts": {
+      "title": "External Expert Profile",
+      "description": "Stores manually created profiles of external experts.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "calendarUrl": { "type": "string" },
+        "topSpecialties": { "type": "string" },
+        "credentials": { "type": "string" },
+        "yearsOfExperience": { "type": "string" },
+        "city": { "type": "string" },
+        "stateProvince": { "type": "string" },
+        "country": { "type": "string" },
+        "zipCode": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "phoneNumber": { "type": "string" },
+        "languages": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["displayName", "createdAt"]
+    },
+    "conversations": {
+      "title": "Chat Conversation",
+      "description": "Metadata for a chat conversation between a client and the admin team.",
+      "type": "object",
+      "properties": {
+        "clientId": { "type": "string" },
+        "clientName": { "type": "string" },
+        "lastMessage": { "type": "string" },
+        "lastMessageAt": { "type": "string", "format": "date-time" },
+        "unreadCount": { "type": "number" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["clientId", "clientName", "updatedAt"]
+    },
+    "notifications": {
+      "title": "Notification",
+      "description": "An internal notification for a user.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "type": { "type": "string", "enum": ["info", "success", "warning", "error"] },
+        "read": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "link": { "type": "string" }
+      },
+      "required": ["userId", "title", "message", "createdAt"]
+    },
+    "shared_files": {
+      "title": "Shared File",
+      "description": "Metadata for a file shared between an admin and a client.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "url": { "type": "string" },
+        "type": { "type": "string" },
+        "size": { "type": "number" },
+        "uploadedAt": { "type": "string", "format": "date-time" },
+        "uploadedBy": { "type": "string", "description": "UID of the admin who uploaded the file" },
+        "recipientId": { "type": "string", "description": "UID of the user who receives the file" },
+        "storagePath": { "type": "string" }
+      },
+      "required": ["name", "url", "uploadedAt", "uploadedBy", "recipientId"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": { "schema": "users", "description": "User profiles" },
+    "/messages/{msgId}": { "schema": "messages", "description": "Chat messages" },
+    "/appointments/{appId}": { "schema": "appointments", "description": "Client appointments" },
+    "/services/{serviceId}": { "schema": "services", "description": "Available services" },
+    "/branding/config": { "schema": "branding", "description": "Global branding configuration" },
+    "/hero/{heroId}": { "schema": "hero", "description": "Hero section content" },
+    "/user_custom_services/{serviceId}": { "schema": "user_custom_services", "description": "Custom services per user" },
+    "/deleted_users/{userId}": { "schema": "deleted_users", "description": "Deleted user profiles" },
+    "/typing/{typingId}": { "schema": "typing", "description": "Real-time typing status" },
+    "/timeOffRequests/{requestId}": { "schema": "timeOffRequests", "description": "Employee time off requests" },
+    "/form_templates/{templateId}": { "schema": "form_templates", "description": "Intake form templates" },
+    "/form_submissions/{submissionId}": { "schema": "form_submissions", "description": "Submissions from intake forms" },
+    "/reminders/{reminderId}": { "schema": "reminders", "description": "User task reminders" },
+    "/interaction_logs/{logId}": { "schema": "interaction_logs", "description": "Logs of admin-user interactions" },
+    "/signature_templates/{templateId}": { "schema": "signature_templates", "description": "Signature templates" },
+    "/signature_requests/{requestId}": { "schema": "signature_requests", "description": "Signature requests" },
+    "/restrictedAreaAudit/{auditId}": { "schema": "restrictedAreaAudit", "description": "Audit logs for restricted area access" },
+    "/external_experts/{expertId}": { "schema": "external_experts", "description": "Manually created external expert profiles" },
+    "/conversations/{convId}": { "schema": "conversations", "description": "Chat conversation metadata" },
+    "/action_audits/{auditId}": { "schema": "action_audits", "description": "Global audit logs for administrator actions" },
+    "/notifications/{notifId}": { "schema": "notifications", "description": "User notifications" },
+    "/shared_files/{fileId}": { "schema": "shared_files", "description": "Files shared with users" }
+  }
+}

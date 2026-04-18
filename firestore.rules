@@ -1,0 +1,309 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && (
+        (request.auth.token.email != null && request.auth.token.email.lower() == "customercare@globalexpertsplus.com") ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'active')
+      );
+    }
+
+    function isSupervisor() {
+      return isAuthenticated() && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'active' &&
+        ('isSupervisor' in get(/databases/$(database)/documents/users/$(request.auth.uid)).data) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isSupervisor == true;
+    }
+
+    function isValidSignatureRequest(data) {
+      return data.keys().hasAll(['templateId', 'templateName', 'userId', 'userName', 'status', 'fieldValues']) &&
+             data.templateId is string &&
+             data.templateName is string &&
+             data.userId is string &&
+             data.userName is string &&
+             data.status in ['pending', 'signed', 'cancelled'] &&
+             data.fieldValues is map &&
+             (!('sentAt' in data) || data.sentAt is string) &&
+             data.fieldValues.size() < 100; // Limit field values size
+    }
+
+    function isValidSharedFile(data) {
+      return data.keys().hasAll(['name', 'url', 'uploadedAt', 'uploadedBy', 'recipientId']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 500 &&
+             data.url is string && (data.url.matches("^https://.*") || data.url.matches("^http://.*")) &&
+             data.uploadedAt is string &&
+             data.uploadedBy is string &&
+             data.recipientId is string;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    match /deleted_admins/{adminId} {
+      allow read, list: if isAdmin() || isSupervisor() || isOwner(adminId);
+      allow write: if isAdmin();
+    }
+
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (
+        isOwner(userId) || 
+        isAdmin() || 
+        isSupervisor() ||
+        (resource.data.referrerId == request.auth.uid) ||
+        (resource.data.supervisorId == request.auth.uid) ||
+        (resource.data.teamLeaderId == request.auth.uid) ||
+        resource.data.role == 'admin' ||
+        resource.data.referralCode != null ||
+        resource.data.dob != null ||
+        (request.auth.token.email != null && resource.data.email.lower() == request.auth.token.email.lower())
+      );
+      allow list: if isAuthenticated() && (
+        isAdmin() || 
+        isSupervisor() ||
+        (resource.data.supervisorId == request.auth.uid) ||
+        (resource.data.teamLeaderId == request.auth.uid) ||
+        (request.auth.token.email != null && resource.data.email.lower() == request.auth.token.email.lower()) ||
+        (resource.data.referrerId == request.auth.uid) ||
+        (request.query.limit == 1) ||
+        (resource.data.referrerId != null && exists(/databases/$(database)/documents/users/$(resource.data.referrerId)) && get(/databases/$(database)/documents/users/$(resource.data.referrerId)).data.email.lower() == request.auth.token.email.lower())
+      );
+      allow create: if isAuthenticated() && (
+        (isOwner(userId) && request.resource.data.role == 'client') ||
+        isAdmin()
+      );
+      allow update: if isAuthenticated() && (
+        isOwner(userId) || 
+        isAdmin() ||
+        isSupervisor() ||
+        (resource.data.email.lower() == request.auth.token.email.lower()) ||
+        (resource.data.referrerId != null && exists(/databases/$(database)/documents/users/$(resource.data.referrerId)) && get(/databases/$(database)/documents/users/$(resource.data.referrerId)).data.email.lower() == request.auth.token.email.lower())
+      );
+      allow delete: if isAdmin() || (isAuthenticated() && resource.data.email.lower() == request.auth.token.email.lower());
+    }
+
+    match /messages/{msgId} {
+      allow read, list: if isAuthenticated() && (request.auth.uid == resource.data.clientId || request.auth.uid == resource.data.senderId || isAdmin() || isSupervisor());
+      allow create: if isAuthenticated() && (request.resource.data.clientId == request.auth.uid || isAdmin());
+      allow update, delete: if isAdmin();
+    }
+
+    match /appointments/{appId} {
+      allow read, list: if isAuthenticated() && (
+        request.auth.uid == resource.data.clientId || 
+        isAdmin() || 
+        isSupervisor() ||
+        (resource.data.supervisorId == request.auth.uid) ||
+        (exists(/databases/$(database)/documents/users/$(resource.data.clientId)) && 
+         get(/databases/$(database)/documents/users/$(resource.data.clientId)).data.referrerId == request.auth.uid) ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         exists(/databases/$(database)/documents/users/$(resource.data.clientId)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.email.lower() == get(/databases/$(database)/documents/users/$(resource.data.clientId)).data.email.lower())
+      );
+      allow create: if isAuthenticated() && (request.resource.data.clientId == request.auth.uid || isAdmin());
+      allow update: if isAuthenticated() && (
+        isAdmin() || 
+        isSupervisor() ||
+        request.auth.uid == resource.data.clientId ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         exists(/databases/$(database)/documents/users/$(resource.data.clientId)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.email.lower() == get(/databases/$(database)/documents/users/$(resource.data.clientId)).data.email.lower())
+      );
+      allow delete: if isAdmin();
+    }
+
+    match /services/{serviceId} {
+      allow read, list: if true;
+      allow write: if isAdmin();
+    }
+
+    match /branding/config {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /hero/{heroId} {
+      allow read, list: if true;
+      allow write: if isAdmin();
+    }
+
+    match /test/connection {
+      allow read: if true;
+    }
+
+    match /user_custom_services/{serviceId} {
+      allow read, list: if isAuthenticated() && (
+        request.auth.uid == resource.data.clientId || 
+        isAdmin() ||
+        isSupervisor() ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         exists(/databases/$(database)/documents/users/$(resource.data.clientId)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.email.lower() == get(/databases/$(database)/documents/users/$(resource.data.clientId)).data.email.lower())
+      );
+      allow create: if isAuthenticated() && (request.auth.uid == request.resource.data.clientId || isAdmin());
+      allow update: if isAdmin() || (isAuthenticated() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && exists(/databases/$(database)/documents/users/$(resource.data.clientId)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.email.lower() == get(/databases/$(database)/documents/users/$(resource.data.clientId)).data.email.lower());
+      allow delete: if isAdmin();
+    }
+
+    match /typing/{typingId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    match /offices/{officeId} {
+      allow read, list: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /deleted_users/{userId} {
+      allow read, list: if isAdmin() || isSupervisor() || (isAuthenticated() && (isOwner(userId) || request.query.limit == 1));
+      allow create: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /deleted_services/{serviceId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /timeOffRequests/{requestId} {
+      allow read, list: if isAuthenticated() && (
+        isAdmin() || 
+        isSupervisor() ||
+        resource.data.employeeId == request.auth.uid || 
+        resource.data.teamLeaderId == request.auth.uid
+      );
+      allow create: if isAuthenticated() && (
+        request.resource.data.employeeId == request.auth.uid || 
+        isAdmin()
+      );
+      allow update: if isAuthenticated() && (
+        isAdmin() || 
+        isSupervisor() ||
+        resource.data.teamLeaderId == request.auth.uid ||
+        (resource.data.employeeId == request.auth.uid && resource.data.status == 'pending')
+      );
+      allow delete: if isAdmin();
+    }
+
+    match /referrals/{referralId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /global_config/{configId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /form_templates/{templateId} {
+      allow read: if true;
+      allow create: if isAdmin() && request.resource.data.formId is string && request.resource.data.formId.matches("^[0-9]{3}$");
+      allow update: if isAdmin() && (
+        (!('formId' in resource.data) && request.resource.data.formId.matches("^[0-9]{3}$")) ||
+        (request.resource.data.formId == resource.data.formId)
+      );
+      allow delete: if isAdmin();
+    }
+
+    match /form_submissions/{submissionId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /reminders/{reminderId} {
+      allow read, list: if isAuthenticated() && (
+        resource.data.creatorId == request.auth.uid || 
+        resource.data.assignedToId == request.auth.uid || 
+        isAdmin() ||
+        isSupervisor()
+      );
+      allow create: if isAuthenticated() && (
+        request.resource.data.creatorId == request.auth.uid || 
+        isAdmin()
+      );
+      allow update: if isAuthenticated() && (
+        resource.data.creatorId == request.auth.uid || 
+        resource.data.assignedToId == request.auth.uid || 
+        isAdmin() ||
+        isSupervisor()
+      );
+      allow delete: if isAuthenticated() && (
+        resource.data.creatorId == request.auth.uid || 
+        isAdmin()
+      );
+    }
+
+    match /interaction_logs/{logId} {
+      allow create: if isAuthenticated();
+      allow read: if isAuthenticated() && (isAdmin() || resource.data.targetUserId == request.auth.uid);
+      allow update, delete: if false;
+    }
+
+    match /signature_templates/{templateId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /signature_requests/{requestId} {
+      allow read, list: if isAuthenticated() && (isAdmin() || isSupervisor() || resource.data.userId == request.auth.uid);
+      allow create: if (isAdmin() || isSupervisor()) && isValidSignatureRequest(request.resource.data);
+      allow update: if isAuthenticated() && (
+        ((isAdmin() || isSupervisor()) && isValidSignatureRequest(request.resource.data)) || 
+        (resource.data.userId == request.auth.uid && resource.data.status == 'pending' && request.resource.data.status == 'signed' && isValidSignatureRequest(request.resource.data))
+      );
+      allow delete: if isAdmin() || isSupervisor();
+    }
+
+    match /user_folders/{folderId} {
+      allow read, list: if isAuthenticated() && (isAdmin() || isSupervisor() || resource.data.userId == request.auth.uid);
+      allow write: if isAdmin() || isSupervisor();
+    }
+
+    match /user_documents/{docId} {
+      allow read, list: if isAuthenticated() && (isAdmin() || isSupervisor() || resource.data.userId == request.auth.uid);
+      allow write: if isAdmin() || isSupervisor();
+    }
+
+    match /restrictedAreaAudit/{auditId} {
+      allow create: if isAdmin();
+      allow read: if isAdmin();
+    }
+
+    match /external_experts/{expertId} {
+      allow read, list: if true;
+      allow write: if isAdmin();
+    }
+
+    match /shared_files/{fileId} {
+      allow read, list: if isAuthenticated() && (isAdmin() || isSupervisor() || resource.data.recipientId == request.auth.uid);
+      allow create: if isAdmin() && isValidSharedFile(request.resource.data);
+      allow update: if isAdmin() && isValidSharedFile(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /conversations/{clientId} {
+      allow read, list: if isAuthenticated() && (request.auth.uid == clientId || isAdmin() || isSupervisor());
+      allow write: if isAuthenticated() && (request.auth.uid == clientId || isAdmin());
+    }
+
+    match /action_audits/{auditId} {
+      allow read, list: if isAdmin() || isSupervisor();
+      allow create: if isAdmin() || isSupervisor();
+      allow update, delete: if false;
+    }
+
+    match /notifications/{notifId} {
+      allow read, list: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin() || isSupervisor());
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin() || isSupervisor());
+      allow delete: if isAdmin();
+    }
+  }
+}

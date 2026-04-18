@@ -1,0 +1,48 @@
+200:        const unsubProfile = onSnapshot(doc(db, 'users', u.uid), (doc) => {
+315:    const unsubscribe = onSnapshot(q, (snapshot) => {
+337:    const unsubscribe = onSnapshot(typingRef, (doc) => {
+518:    const unsubscribe = onSnapshot(q, (snapshot) => {
+651:    const unsubscribe = onSnapshot(q, (snapshot) => {
+1212:    const unsubUser = onSnapshot(doc(db, 'users', userId), (snap) => {
+1219:    const unsubReferrals = onSnapshot(q, (snapshot) => {
+1258:    const unsubscribe = onSnapshot(q, (snapshot) => {
+1355:    const unsubscribe = onSnapshot(doc(db, 'branding', 'config'), (docSnap) => {
+1466:    const unsubscribe = onSnapshot(q, (snapshot) => {
+3222:    const unsub = onSnapshot(doc(db, 'global_config', 'payment'), (docSnap) => {
+3535:    const unsub = onSnapshot(doc(db, 'users', userId), (docSnap) => {
+3546:    const unsubscribe = onSnapshot(q, (snapshot) => {
+3571:      return onSnapshot(q, (snapshot) => {
+3896:    const unsubscribe = onSnapshot(q, (snapshot) => {
+4234:    const unsub = onSnapshot(collection(db, 'deleted_admins'), (snap) => {
+4338:    const unsubscribeOffices = onSnapshot(collection(db, 'offices'), (snapshot) => {
+4343:    const unsubscribeAdmins = onSnapshot(query(collection(db, 'users'), where('role', '==', 'admin')), (snapshot) => {
+4347:    const unsubscribeUsers = onSnapshot(collection(db, 'users'), (snapshot) => {
+5663:    const unsubscribeUsers = onSnapshot(qUsers, (snapshot) => {
+5668:    const unsubscribeApps = onSnapshot(qApps, (snapshot) => {
+5673:    const unsubscribeOffices = onSnapshot(collection(db, 'offices'), (snapshot) => {
+5677:    const unsubscribeServices = onSnapshot(collection(db, 'services'), (snapshot) => {
+5697:    const unsubscribeDeleted = onSnapshot(qDeleted, (snapshot) => {
+5706:    const unsubscribe = onSnapshot(doc(db, 'global_config', 'google_drive'), (doc) => {
+7462:    const unsubscribe = onSnapshot(q, (snapshot) => {
+7867:    const unsubscribe = onSnapshot(q, (snapshot) => {
+7979:    const unsubUser = onSnapshot(doc(db, 'users', userId), (snap) => {
+7984:    const unsubFolders = onSnapshot(query(collection(db, 'user_folders'), where('userId', '==', userId)), (snap) => {
+7988:    const unsubDocs = onSnapshot(query(collection(db, 'user_documents'), where('userId', '==', userId)), (snap) => {
+8318:    const unsubscribeUser = onSnapshot(doc(db, 'users', userId), (snapshot) => {
+8340:    const unsubscribeApp = onSnapshot(qApp, (snapshot) => {
+8347:    const unsubscribeReferred = onSnapshot(qReferred, (snapshot) => {
+9670:    const unsubscribe = onSnapshot(q, (snapshot) => {
+10329:    const unsubscribe = onSnapshot(q, (snapshot) => {
+10740:    const unsubscribe = onSnapshot(q, (snapshot) => {
+10750:    const unsubscribeExternal = onSnapshot(externalQ, (snapshot) => {
+11624:    const unsub = onSnapshot(doc(db, 'global_config', 'payment'), (docSnap) => {
+12244:    const unsubTemplates = onSnapshot(collection(db, 'signature_templates'), (snap) => {
+12255:    const unsubRequests = onSnapshot(qRequests, (snap) => {
+12264:      const unsubUsers = onSnapshot(collection(db, 'users'), (snap) => {
+13551:    const unsubscribe = onSnapshot(q, (snapshot) => {
+13792:    const unsubscribe = onSnapshot(q, (snapshot) => {
+14524:    const unsubscribe = onSnapshot(q, (snapshot) => {
+14800:    const unsubscribe = onSnapshot(q, (snapshot) => {
+15053:    const unsubscribe = onSnapshot(q, (snapshot) => {
+17541:    const unsubscribe = onSnapshot(q, (snapshot) => {
+17940:    const unsubscribe = onSnapshot(q, (snapshot) => {
